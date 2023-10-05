@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  nats-pub:
+    build: ./pub
+    depends_on:
+      - nats-streaming
+    environment:
+      - NATS_URL=nats://nats-streaming:4222
+    networks:
+      - mycluster
+    ports:
+      - 8081:8081
+
+  back:
+    build: ./back
+    command: >
+      sh -c "while ! ./wait-for-postgres.sh db ./back -- echo 'PostgreSQL started'; do sleep 1; done && go run cmd/main.go"
+    depends_on:
+      - db
+      - nats-streaming
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=qwerty
+      - NATS_URL=nats://nats-streaming:4222
+    ports:
+      - 8000:8000
+    networks:
+      - mycluster
+
+  db:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./sql/create-tables.sql:/docker-entrypoint-initdb.d/create-tables.sql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=qwerty
+    ports:
+      - 5435:5432
+    networks:
+      - mycluster
+
+  nats-streaming:
+    image: nats-streaming:latest
+    ports:
+      - "4224:4224"
+      - "8222:8222"
+    environment:
+      - STAN_CLUSTER_ID=mycluster
+    command: ["--cluster_id", "mycluster"]
+    restart: always
+    networks:
+      - mycluster
+
+networks:
+  mycluster:
+
+

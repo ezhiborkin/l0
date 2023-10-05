@@ -1,0 +1,13 @@
+port: "8080"
+db:
+   host: "db"
+   port: "5432"
+   username: "postgres"
+   dbname: "postgres"
+   sslmode: "disable"
+clientID: "subscriber-client"
+clustedID: "mycluster"
+natsURL: "nats://localhost:4222"
+defaultExpiration: "1h"
+cleanupInterval: "1h"
+
