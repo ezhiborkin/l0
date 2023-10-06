@@ -56,7 +56,3 @@ CREATE TABLE items (
     status INT
 );
 
--- CREATE TABLE roflans (
---     order_uid VARCHAR(255) PRIMARY KEY,
---     track_number VARCHAR(255)
--- );

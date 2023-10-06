@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"back/pkg/cashe"
 	"back/pkg/service"
 	"net/http"
 
@@ -9,10 +10,14 @@ import (
 
 type Handler struct {
 	services *service.Service
+	cashe    *cashe.Cache
 }
 
-func NewHandler(services *service.Service) *Handler {
-	return &Handler{services: services}
+func NewHandler(services *service.Service, cashe *cashe.Cache) *Handler {
+	return &Handler{
+		services: services,
+		cashe:    cashe,
+	}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -20,20 +25,19 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		orders := api.Group("/orders")
+		cashe := api.Group("/cache")
 		{
-			orders.GET("/:id", func(c *gin.Context) {
-				order, err := h.getById(c)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get order"})
-					return
-				}
-				c.JSON(http.StatusOK, order)
-			})
+			cashe.GET("/:id", h.getByIdCache)
 		}
+		bd := api.Group("/bd")
+		{
+			bd.GET("/:id", h.getById)
+		}
+
 	}
 
-	router.GET("/lol", func(c *gin.Context) {
+	lol := router.Group("/lol")
+	lol.GET("/lol", func(c *gin.Context) {
 		c.JSON(http.StatusOK, 123)
 	})
 

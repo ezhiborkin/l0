@@ -21,6 +21,11 @@ import (
 )
 
 func main() {
+	natsURL := "nats://nats-streaming:4222"
+	clusterID := "mycluster"
+	clientID := "subscriber-client"
+	channel := "my-channel"
+
 	if err := initConfig(); err != nil {
 		log.Fatalf("error occured while initializing configs: %s", err.Error())
 	}
@@ -28,8 +33,6 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("error occured while loading env variables: %s", err.Error())
 	}
-
-	// Ожидание завершения приложения
 
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
@@ -51,39 +54,40 @@ func main() {
 	log.Printf("Connected to DB!")
 
 	repos := repository.NewRepository(db)
-	cache := cashe.NewCache(2*time.Hour, 2*time.Hour)
-	services := service.NewService(repos, cache)
-	handlers := handler.NewHandler(services)
+	cache, err := cashe.NewCache(2*time.Hour, 2*time.Minute, db)
+	if err != nil {
+		fmt.Println(err)
+	}
+	services := service.NewService(repos)
+	handlers := handler.NewHandler(services, cache)
 
-	natsURL := "nats://nats-streaming:4222"
-	clusterID := "mycluster"
-	clientID := "subscriber-client"
+	fmt.Println(cache.Get("b563feb7b2b84b6test"))
 
-	// Создание соединения
+	// Создание соединения с NATS Streaming
 	sc, err := stan.Connect(clusterID, clientID, stan.NatsURL(natsURL))
 	if err != nil {
 		log.Fatalf("Error connecting to NATS Streaming: %v", err)
 	}
 	defer sc.Close()
 
-	// Название канала, на который вы хотите подписаться
-	channel := "my-channel"
-
-	// Обработчик сообщений
+	// Обработчик сообщений из канала
 	handlerStan := func(msg *stan.Msg) {
 		var orderData order.OrderData
 		if err := json.Unmarshal(msg.Data, &orderData); err != nil {
 			log.Fatalf("Error unmarshalling data: %v", err)
+			return
 		}
 
-		cache.Set(orderData.OrderUID, orderData, 1*time.Hour)
-		orderDataFromCache, ok := cache.Get(orderData.OrderUID)
-		if ok {
-			fmt.Printf("Cache: %v", orderDataFromCache)
-			log.Printf("Cache: %v", orderDataFromCache)
-		} else {
-			fmt.Println("Cache: not found")
+		err := cache.Set(orderData.OrderUID, orderData, 1*time.Hour)
+		if err != nil {
+			log.Println("ZHOPA")
+			return
+		}
+		orderDataFromCache, err := cache.Get(orderData.OrderUID)
+		if err != nil {
 			log.Println("Cache: not found")
+		} else {
+			log.Printf("Cache: %v", orderDataFromCache)
 		}
 
 		if err := order.InsertOrder(db, orderData); err != nil {

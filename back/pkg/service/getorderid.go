@@ -3,20 +3,25 @@ package service
 import (
 	"back/pkg/order"
 	"back/pkg/repository"
+	"errors"
+	"fmt"
 )
 
-type GetOrderService struct {
+type GetOrderPService struct {
 	repo repository.GetOrderById
 }
 
-func NewGetOrderService(repo repository.GetOrderById) *GetOrderService {
-	return &GetOrderService{repo: repo}
+func NewGetOrderPService(repo repository.GetOrderById) *GetOrderPService {
+	return &GetOrderPService{
+		repo: repo,
+	}
 }
 
-func (s *GetOrderService) GetById(id string) (*order.OrderData, error) {
+func (s *GetOrderPService) GetById(id string) (*order.OrderData, error) {
 	order, err := s.repo.GetById(id)
 	if err != nil {
-		return nil, err
+		fmt.Println("getorderid")
+		return nil, errors.New("geto")
 	}
 
 	return order, nil
