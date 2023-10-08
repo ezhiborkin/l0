@@ -4,11 +4,11 @@ FROM golang:latest
 RUN go version
 ENV GOPATH=/
 
-COPY . .
+COPY ./ ./
 
 # Install any needed dependencies
 RUN go mod download
-RUN go build -o main .
+RUN go build -o pub ./cmd/main.go 
 
 # Command to run the executable
-CMD ["./main"]
+CMD ["./pub"]

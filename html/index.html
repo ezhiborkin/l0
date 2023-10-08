@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Пример фронтенда</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <div id="window1">
+        <h2>Окно 1</h2>
+        <textarea id="jsonInput" placeholder="Введите JSON данные здесь"></textarea>
+        <button id="button1">Отправить POST-запрос</button>
+    </div>
+
+    <div id="window2">
+        <h2>Окно 2</h2>
+        <input type="text" id="idInput" placeholder="Введите ID">
+        <button id="button2">Отправить GET-запрос</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // JavaScript для обработки действий кнопок
+
+        // Получаем ссылки на элементы DOM
+        var button1 = document.getElementById('button1');
+        var jsonInput = document.getElementById('jsonInput');
+        var button2 = document.getElementById('button2');
+        var idInput = document.getElementById('idInput');
+        var resultDiv = document.getElementById('result');
+
+        // Функция, которая выполняется при нажатии на кнопку 1
+        button1.addEventListener('click', function() {
+            // Получаем введенные JSON данные из текстового поля
+            var jsonData = jsonInput.value;
+
+            try {
+                // Пытаемся распарсить JSON данные
+                var requestData = JSON.parse(jsonData);
+                
+                // URL, на который будем отправлять POST-запрос
+                var postUrl = 'http://localhost:8081/api/publish';
+
+                // Опции для POST-запроса
+                var requestOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                };
+
+                // Выполняем POST-запрос
+                fetch(postUrl, requestOptions)
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('Ошибка сети');
+                        }
+                        return response.text();
+                    })
+                    .then(function(data) {
+                        alert('POST-запрос выполнен успешно!\nОтвет:\n' + data);
+                    })
+                    .catch(function(error) {
+                        alert('Произошла ошибка при выполнении POST-запроса: ' + error.message);
+                    });
+            } catch (error) {
+                alert('Ошибка в JSON данных: ' + error.message);
+            }
+        });
+
+        // Функция, которая выполняется при нажатии на кнопку 2
+        button2.addEventListener('click', function() {
+            // Получаем введенный ID из текстового поля
+            var id = idInput.value;
+
+            // URL, на который будем отправлять GET-запрос
+            var getUrl = 'http://localhost:8000/api/cache/' + id;
+
+            // Выполняем GET-запрос
+            fetch(getUrl)
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Ошибка сети');
+                    }
+                    return response.text();
+                })
+                .then(function(data) {
+                    // Выводим полученные данные на экран
+                    resultDiv.textContent = 'Данные получены успешно:\n' + data;
+                })
+                .catch(function(error) {
+                    alert('Произошла ошибка при выполнении GET-запроса: ' + error.message);
+                });
+        });
+    </script>
+</body>
+</html>

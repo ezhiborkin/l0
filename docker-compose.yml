@@ -1,7 +1,13 @@
 version: '3.8'
 
 services:
-  nats-pub:
+  webapp:
+    build: ./html
+    ports:
+      - 8082:8082
+    networks:
+      - mycluster
+  pub:
     build: ./pub
     depends_on:
       - nats-streaming
@@ -48,7 +54,7 @@ services:
   nats-streaming:
     image: nats-streaming:latest
     ports:
-      - "4224:4224"
+      - "4222:4222"
       - "8222:8222"
     environment:
       - STAN_CLUSTER_ID=mycluster
@@ -59,5 +65,3 @@ services:
 
 networks:
   mycluster:
-
-

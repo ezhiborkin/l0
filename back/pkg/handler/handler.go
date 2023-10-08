@@ -5,6 +5,7 @@ import (
 	"back/pkg/service"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,6 +23,8 @@ func NewHandler(services *service.Service, cashe *cashe.Cache) *Handler {
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+
+	router.Use(cors.Default())
 
 	api := router.Group("/api")
 	{

@@ -1,10 +1,6 @@
 package order
 
 import (
-	"errors"
-	"log"
-	"time"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -62,20 +58,12 @@ type Item struct {
 	Status      int    `json:"status"`
 }
 
+// Вставка данных в таблицу "orders"
 func InsertOrder(db *sqlx.DB, data OrderData) error {
-	if data.DateCreated == "" {
-		return errors.New("DateCreated field is empty")
-	}
-
-	dateCreated, err := time.Parse(time.RFC3339, data.DateCreated)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(`
+	_, err := db.Exec(`
         INSERT INTO orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		data.OrderUID, data.TrackNumber, data.Entry, data.Locale, data.InternalSig, data.CustomerID, data.DeliveryService, data.ShardKey, data.SmID, dateCreated, data.OofShard)
+		data.OrderUID, data.TrackNumber, data.Entry, data.Locale, data.InternalSig, data.CustomerID, data.DeliveryService, data.ShardKey, data.SmID, data.DateCreated, data.OofShard)
 	return err
 }
 
